@@ -152,6 +152,64 @@ class ModelMonitor:
         if hasattr(self.model, 'n_features_in_'):
             self.model_info["features"] = str(self.model.n_features_in_)
 
+        # Persistence
+        self.model_path = model_path
+        self.baseline_source = "Not learned"
+        self._load_baseline()
+
+    def _get_baseline_path(self):
+        # Ensure baselines directory exists
+        base_dir = os.path.join(os.path.dirname(self.model_path) if os.path.isabs(self.model_path) else ".", "baselines")
+        if not os.path.exists(base_dir):
+            os.makedirs(base_dir)
+            
+        # Generate filename based on model path to avoid conflicts
+        base_name = os.path.splitext(os.path.basename(self.model_path))[0]
+        return os.path.join(base_dir, f"{base_name}_baseline.json")
+
+    def _save_baseline(self):
+        import json
+        try:
+            data = {
+                "metadata": {
+                    "model_path": self.model_path,
+                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "window_size": self.warmup_target
+                },
+                "stats": self.baseline_stats,
+                "raw_data": list(self.warmup_data) # Save all raw steps
+            }
+            with open(self._get_baseline_path(), "w") as f:
+                json.dump(data, f, indent=4)
+            print(f"✅ Baseline data saved to {self._get_baseline_path()}")
+            self.baseline_source = f"Saved {data['metadata']['timestamp']}"
+        except Exception as e:
+            print(f"Failed to save baseline: {e}")
+
+    def _load_baseline(self):
+        import json
+        path = self._get_baseline_path()
+        if not os.path.exists(path):
+            return
+            
+        try:
+            with open(path, "r") as f:
+                data = json.load(f)
+            
+            # Validation
+            saved_model_path = data.get("metadata", {}).get("model_path", "")
+            if saved_model_path != self.model_path:
+                print(f"⚠️ Baseline mismatch: Saved for {saved_model_path}, current is {self.model_path}")
+                return
+
+            self.baseline_stats = data["stats"]
+            self.warmup_data = data.get("raw_data", []) # Restore raw data
+            self.baseline_learned = True
+            self.baseline_source = f"Loaded from file ({data['metadata']['timestamp']})"
+            print(f"✅ Baseline loaded from {path}")
+        except Exception as e:
+            print(f"Failed to load baseline: {e}")
+
     def _load_model_robust(self, path):
         if not os.path.exists(path):
             return None
@@ -279,6 +337,7 @@ class ModelMonitor:
             sigma = df[col].std() if df[col].std() > 0 else 1e-6
             self.baseline_stats[col] = {'mean': mu, 'std': sigma}
         self.baseline_learned = True
+        self._save_baseline()
 
     def _check_health(self, metrics):
         if not self.baseline_learned:
@@ -599,10 +658,21 @@ if st.sidebar.button("🔄 RESET SYSTEM"):
     st.rerun()
 
 # Reset baseline only (do not restart whole system)
+# Reset baseline only (do not restart whole system)
 if st.sidebar.button("🔁 RESET BASELINE"):
     st.session_state.baseline_learned = False
     st.session_state.calibration_count = 0
     st.session_state.baseline_stats = {}
+    
+    # Delete the persistent file
+    try:
+        baseline_file = st.session_state.monitor._get_baseline_path()
+        if os.path.exists(baseline_file):
+            os.remove(baseline_file)
+            st.toast("Baseline file deleted", icon="🗑️")
+    except:
+        pass
+
     # Clear internal monitor warmup to restart calibration cleanly
     st.session_state.monitor.warmup_data = []
     st.session_state.monitor.baseline_stats = {}
@@ -855,7 +925,18 @@ if st.session_state.monitoring_run:
                 show_stat(stat_cols[3], "Avg Margin", "margin")
         else:
             # Baseline Established Message (Persistent and driven by session state)
-            cal_banner_ph.success("✅ BASELINE ESTABLISHED - MONITORING ACTIVE")
+            # Baseline Established Message (Persistent and driven by session state)
+            source_info = getattr(monitor, 'baseline_source', 'Session')
+            if "Loaded" in source_info:
+                ts = source_info.split('(')[-1].strip(')')
+                msg = f"✅ BASELINE ACTIVE (Loaded: {ts})"
+            elif "Saved" in source_info:
+                ts = source_info.replace("Saved ", "")
+                msg = f"✅ BASELINE ACTIVE (Saved: {ts})"
+            else:
+                msg = f"✅ BASELINE ESTABLISHED ({source_info})"
+                
+            cal_banner_ph.success(msg)
             cal_progress_ph.empty()
             cal_stats_ph.empty()
 
