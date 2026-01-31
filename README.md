@@ -135,13 +135,53 @@ Silent degradation causes:
 
 Our solution detects early degradation before catastrophic failure, making it suitable for AI pipelines, cloud systems, and production services.
 
----
 
-## Future Improvements
+## Docker Deployment
 
-* Real-time streaming integration
-* Dashboard using Streamlit or React
-* Drift detection using KL Divergence
-* Cloud deployment with Docker
+### Pull the image
+Pull the published image:
+```bash
+docker pull r0xh4n/silentguard:v1.0
+```
+
+### Run (recommended)
+Mount the client's model folder read-only and set MODEL_PATH:
+```bash
+docker run -d --name silentguard_monitor \
+  -p 8501:8501 \
+  -v /opt/secure/models:/app/models:ro \
+  -e MODEL_PATH=/app/models/my_model.pkl \
+  r0xh4n/silentguard:v1.0
+```
+Access the dashboard at: http://localhost:8501
+
+### Docker Compose (client example)
+```yaml
+version: '3.8'
+services:
+  silentguard:
+    image: r0xh4n/silentguard:v1.0
+    container_name: silentguard_monitor
+    ports:
+      - "8501:8501"
+    volumes:
+      - /opt/secure/models:/app/models:ro
+    environment:
+      - MODEL_PATH=/app/models/my_model.pkl
+    restart: unless-stopped
+```
+
+### Offline distribution
+Export and load a tar if the client is air-gapped:
+```bash
+docker save -o silentguard_v1.tar r0xh4n/silentguard:v1.0
+# On client:
+docker load -i silentguard_v1.tar
+```
+
+### Security notes
+- Do **NOT** include `.pkl`/`.joblib` files or secrets inside the image.
+- Mount model artifacts at runtime with `:ro`.
+- Use a `.dockerignore` to exclude local models and secrets when building.
 
 ---
