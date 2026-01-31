@@ -138,11 +138,18 @@ Our solution detects early degradation before catastrophic failure, making it su
 
 ## Docker Deployment
 
+### Docker Login
+
+```bash
+docker login
+```
+
 ### Pull the image
 Pull the published image:
 ```bash
-docker pull r0xh4n/silentguard:v1.0
+docker pull r0xh4n/silentguard:tagname
 ```
+tagname refers latest version
 
 ### Run (recommended)
 Mount the client's model folder read-only and set MODEL_PATH:
