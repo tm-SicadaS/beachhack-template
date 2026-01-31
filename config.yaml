@@ -8,13 +8,20 @@ model_path: "nasa_rul_failure_prediction_model.pkl"
 
 # Monitoring Thresholds
 monitoring:
+  # Baseline Learning
+  baseline_window_size: 50  # Number of steps to collect for baseline
+  
   # Latency: Warning if inference takes longer than this (ms)
   latency_threshold_ms: 100.0
   
-  # Drift: Critical if prediction deviates by more than N standard deviations from baseline
-  drift_sigma_threshold: 3.0
+  # Advanced ML Metric Thresholds (Z-score triggers are automatic >2 warning, >3 critical)
+  # Absolute safety thresholds (optional overrides):
+  sensitivity_threshold: 0.1      # Max allowed deviation fraction for perturbed input
+  variance_threshold: 10.0        # Max allowed rolling variance
+  uncertainty_threshold: 5.0      # Max model uncertainty (std dev)
+  min_safety_margin: 10.0         # Critical if RUL prediction < this value
   
-  # Degradation: Warning if degradation score (0-100) drops below this
+  # Degradation Score Impacts
   health_warning_threshold: 70
   health_critical_threshold: 40
 
@@ -29,6 +36,8 @@ email:
   enabled: true
   host: sandbox.smtp.mailtrap.io
   port: 2525
-  username: 8c1255d22724ad
-  password: 1347fbc2c88a1b
+  # username: 8c1255d22724ad
+  # password: 1347fbc2c88a1b
+  username: 105711b318891c
+  password: 189fc934d8f3de
   sender: "AI Monitor <alerts@demo.ai>"
