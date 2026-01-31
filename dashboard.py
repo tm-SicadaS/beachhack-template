@@ -94,6 +94,8 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+import smtplib
+from email.mime.text import MIMEText
 
 # --- 1. CONFIGURATION LOADING ---
 def load_config():
@@ -106,7 +108,7 @@ def load_config():
             "latency_threshold_ms": 100.0,
             "drift_sigma_threshold": 3.0,
             "health_warning_threshold": 70,
-            "health_critical_threshold": 40
+            "health_warning_threshold": 70, "health_critical_threshold": 40
         },
         "email": {
             "enabled": True,
@@ -115,7 +117,8 @@ def load_config():
             "username": "8c1255d22724ad",
             "password": "1347fbc2c88a1b",
             "sender": "AI Monitor <alerts@demo.ai>"
-        }
+        },
+
     }
 
 CONFIG = load_config()
@@ -279,21 +282,37 @@ class ModelMonitor:
         health_score = max(0, min(100, health_score))
         return health_score, alerts
 
-# --- 3. EMAIL ALERTS ---
-def send_alert_email(recipient, subject, body, config):
-    if not config['email']['enabled']:
-        return
+# --- EMAIL FUNCTION ---
+def send_alert_email(to_email, subject, body, config):
+    email_config = config.get('email', {})
+    if not email_config.get('enabled', True):  # Default to enabled if not set
+        return False
+
     try:
+        port = email_config.get('port', 2525)
+        print(f"Connecting to {email_config['host']}:{port}")
+        if port == 465:
+            server = smtplib.SMTP_SSL(email_config['host'], port)
+        else:
+            server = smtplib.SMTP(email_config['host'], port)
+            if port == 587:
+                server.starttls()
+        print("Logging in...")
+        server.login(email_config['username'], email_config['password'])
+        print("Logged in, sending email...")
         msg = MIMEText(body)
         msg['Subject'] = subject
-        msg['From'] = config['email']['sender']
-        msg['To'] = recipient
-        with smtplib.SMTP(config['email']['host'], config['email']['port']) as server:
-            server.starttls()
-            server.login(config['email']['username'], config['email']['password'])
-            server.send_message(msg)
+        msg['From'] = email_config['sender']
+        msg['To'] = to_email
+        server.sendmail(email_config['sender'], to_email, msg.as_string())
+        print("Email sent successfully")
+        server.quit()
+        return True
     except Exception as e:
-        st.sidebar.error(f"Email send failed: {e}")
+        print(f"Failed to send email: {e}")
+        st.error(f"Failed to send email: {e}")
+        return False
+
 
 # --- 3. DASHBOARD UI ---
 st.set_page_config(page_title="AI Model Monitor", layout="wide")
@@ -312,6 +331,9 @@ if os.path.exists(bg_path):
         bg_url = "app/static/background.png"
 
 st.markdown(f"""
+st.set_page_config(page_title="SilentGuard", layout="wide", page_icon="🤖")
+
+st.markdown("""
 <style>
     /* Set the background image */
     .stApp {{
@@ -373,7 +395,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("Minimal AI Monitor")
+st.title("🛡️ SilentGuard")
 
 # Sidebar Controls
 st.sidebar.header("⚙️ Controls")
@@ -381,15 +403,18 @@ st.sidebar.header("⚙️ Controls")
 if 'monitoring_active' not in st.session_state:
     st.session_state.monitoring_active = False
 
-if st.sidebar.button("▶️ Start Monitoring" if not st.session_state.monitoring_active else "⏸️ Stop Monitoring"):
-    st.session_state.monitoring_active = not st.session_state.monitoring_active
-    st.rerun()
+def start_monitoring():
+    st.session_state.monitoring_active = True
 
-st.sidebar.markdown("---")
-st.sidebar.subheader(" Alert Settings")
-user_email = st.sidebar.text_input("Your Email", placeholder="user@example.com")
+def stop_monitoring():
+    st.session_state.monitoring_active = False
 
-if st.sidebar.button(" Send Summary Report"):
+st.sidebar.button("▶ Start Monitoring", type="primary", on_click=start_monitoring)
+st.sidebar.button("⏹ Stop Monitoring", on_click=stop_monitoring)
+
+user_email = st.sidebar.text_input("Enter your email for alerts", placeholder="user@example.com")
+
+if st.sidebar.button("📧 Send Report"):
     if user_email:
         # Generate report
         total_steps = 0

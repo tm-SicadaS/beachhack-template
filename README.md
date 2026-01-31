@@ -1,4 +1,4 @@
-# Silent Model Failure Detection System (SMFDS)
+# Pre Incident Failure Detection System
 
 ## Selected Problem Statement
 
@@ -77,7 +77,7 @@ Instead of checking individual thresholds, it detects abnormal combinations of t
 
 ```
 git clone <your-repo-link>
-cd SilentFailureDetection
+cd Beachhack-template
 ```
 
 ### 2. Install Dependencies
@@ -85,31 +85,6 @@ cd SilentFailureDetection
 ```
 pip install -r requirements.txt
 ```
-
-### 3. Add Dataset
-
-Place your dataset inside:
-
-```
-/data/metrics.csv
-```
-
-Ensure dataset includes:
-
-* latency
-* memory
-* cpu_usage
-* error_rate
-
-### 4. Train Baseline Model
-
-Run:
-
-```
-python train_baseline.py
-```
-
-This generates:
 
 ```
 /models/baseline_model.pkl
@@ -131,8 +106,7 @@ The system will:
 
 ## Demo
 
-Live Demo (if applicable):
-Add your demo link here
+Live Demo : TO BE ADDED
 
 Example Output:
 
@@ -143,12 +117,10 @@ Example Output:
 
 ## Screenshots
 
-(Add screenshots of:)
+<img width="1882" height="855" alt="Screenshot 2026-01-31 200015" src="https://github.com/user-attachments/assets/b67072b9-541a-40ff-9b88-a89048504a74" />
 
-* Dataset preview
-* Training output
-* Monitoring console output
-* Graph showing anomaly detection
+<img width="2963" height="2364" alt="feature_importance_rul" src="https://github.com/user-attachments/assets/67eb4a40-4477-4a86-b133-cd522775d2e7" />
+<img width="4170" height="3014" alt="rul_prediction_analysis" src="https://github.com/user-attachments/assets/3c123e73-9e70-4cee-ba7d-e4d39a603873" />
 
 ---
 
@@ -168,7 +140,6 @@ Our solution detects early degradation before catastrophic failure, making it su
 ## Future Improvements
 
 * Real-time streaming integration
-* Slack / Email alert integration
 * Dashboard using Streamlit or React
 * Drift detection using KL Divergence
 * Cloud deployment with Docker
