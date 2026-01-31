@@ -10,6 +10,8 @@ import time
 import os
 from collections import deque
 import psutil
+import smtplib
+from email.mime.text import MIMEText
 
 # --- 1. CONFIGURATION LOADING ---
 def load_config():
@@ -21,9 +23,17 @@ def load_config():
         "monitoring": {
             "latency_threshold_ms": 100.0,
             "drift_sigma_threshold": 3.0,
-            "health_warning_threshold": 70,
-            "health_critical_threshold": 40
-        }
+            "health_warning_threshold": 70,            "health_critical_threshold": 40
+        },
+        "email": {
+    "enabled": True,
+    "host": "sandbox.smtp.mailtrap.io",
+    "port": 2525,
+    "username": "8c1255d22724ad",
+    "password": "1347fbc2c88a1b",
+    "sender": "AI Monitor <alerts@demo.ai>"
+}
+
     }
 
 CONFIG = load_config()
@@ -187,6 +197,38 @@ class ModelMonitor:
         health_score = max(0, min(100, health_score))
         return health_score, alerts
 
+# --- EMAIL FUNCTION ---
+def send_alert_email(to_email, subject, body, config):
+    email_config = config.get('email', {})
+    if not email_config.get('enabled', True):  # Default to enabled if not set
+        return False
+
+    try:
+        port = email_config.get('port', 2525)
+        print(f"Connecting to {email_config['host']}:{port}")
+        if port == 465:
+            server = smtplib.SMTP_SSL(email_config['host'], port)
+        else:
+            server = smtplib.SMTP(email_config['host'], port)
+            if port == 587:
+                server.starttls()
+        print("Logging in...")
+        server.login(email_config['username'], email_config['password'])
+        print("Logged in, sending email...")
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = email_config['sender']
+        msg['To'] = to_email
+        server.sendmail(email_config['sender'], to_email, msg.as_string())
+        print("Email sent successfully")
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        st.error(f"Failed to send email: {e}")
+        return False
+
+
 # --- 3. DASHBOARD UI ---
 st.set_page_config(page_title="AI Model Monitor", layout="wide", page_icon="🤖")
 
@@ -215,6 +257,36 @@ def stop_monitoring():
 
 st.sidebar.button("▶ Start Monitoring", type="primary", on_click=start_monitoring)
 st.sidebar.button("⏹ Stop Monitoring", on_click=stop_monitoring)
+
+user_email = st.sidebar.text_input("Enter your email for alerts", placeholder="user@example.com")
+
+if st.sidebar.button("📧 Send Report"):
+    if user_email:
+        # Generate report
+        total_steps = 0
+        avg_health = 0
+        total_alerts = 0
+        if 'monitor' in locals() and monitor is not None:
+            total_steps = len(monitor.history['predictions'])
+            avg_health = np.mean(list(monitor.history['health'])) if monitor.history['health'] else 0
+        if 'alerts_history' in locals():
+            total_alerts = len(alerts_history)
+        report_body = f"""
+AI Model Monitoring Report
+
+Total Monitoring Steps: {total_steps}
+Average Health Score: {avg_health:.1f}/100
+Total Alerts: {total_alerts}
+
+Recent Alerts:
+""" + "\n".join(list(alerts_history)[:10] if 'alerts_history' in locals() else []) + """
+
+Thank you for using the AI Monitor.
+"""
+        send_alert_email(user_email, "AI Monitor Report", report_body, CONFIG)
+        st.sidebar.success("Report sent!")
+    else:
+        st.sidebar.error("Please enter your email first.")
 
 st.sidebar.markdown("---")
 config_view = st.sidebar.expander("View Config")
@@ -254,6 +326,8 @@ if st.session_state.monitoring_active:
     # State
     alerts_history = deque(maxlen=200)
     step = 0
+    last_status = "NORMAL"
+    max_steps = 500  # Limit to prevent infinite loop blocking UI
 
     # Additional placeholders for CPU and Memory charts (clean UI: one chart per metric)
     chart_col3, chart_col4 = st.columns(2)
@@ -286,6 +360,16 @@ if st.session_state.monitoring_active:
             score, current_alerts = monitor.check_health(metrics)
         else:
             score, current_alerts = 100, []
+
+        # Determine current status
+        current_status = "CRITICAL" if score < 40 else "WARNING" if score < 70 else "NORMAL"
+
+        # Send email on status change to WARNING or CRITICAL
+        if user_email and current_status != last_status and current_status in ["WARNING", "CRITICAL"]:
+            subject = f"AI Monitor Alert: {current_status}"
+            body = f"System status changed to {current_status}.\n\nAlerts:\n" + "\n".join(current_alerts) + f"\n\nHealth Score: {score}/100\nStep: {step}"
+            send_alert_email(user_email, subject, body, CONFIG)
+            last_status = current_status
 
         # Add alerts to log
         if current_alerts:
@@ -371,3 +455,5 @@ if st.session_state.monitoring_active:
         # Pause between iterations to make it truly real-time (2.5s)
         time.sleep(2.5)
         step += 1
+        if step >= max_steps:
+            break
