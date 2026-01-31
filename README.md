@@ -158,7 +158,7 @@ docker run -d --name silentguard_monitor \
   -p 8501:8501 \
   -v /opt/secure/models:/app/models:ro \
   -e MODEL_PATH=/app/models/my_model.pkl \
-  r0xh4n/silentguard:v1.0
+  r0xh4n/silentguard:tagname
 ```
 Access the dashboard at: http://localhost:8501
 
@@ -178,13 +178,6 @@ services:
     restart: unless-stopped
 ```
 
-### Offline distribution
-Export and load a tar if the client is air-gapped:
-```bash
-docker save -o silentguard_v1.tar r0xh4n/silentguard:v1.0
-# On client:
-docker load -i silentguard_v1.tar
-```
 
 ### Security notes
 - Do **NOT** include `.pkl`/`.joblib` files or secrets inside the image.
