@@ -633,7 +633,7 @@ def send_email_alert(alert_list, score, step, current_metrics, monitor, force=Fa
 
                     <!-- 6. ACTIONS -->
                     <div style="background-color: #e2e3e5; padding: 15px; border-radius: 4px; margin-top: 20px;">
-                        <h4 style="margin-top: 0;">🛡️ Recommended Actions</h4>
+                        <h4 style="margin-top: 0;"> Recommended Actions</h4>
                         <ul style="margin-bottom: 0; padding-left: 20px;">
                             {''.join([f'<li>{a}</li>' for a in rec_actions])}
                         </ul>
@@ -692,9 +692,9 @@ def get_synthetic_input(step):
     return feats.reshape(1, -1)
 
 # --- 6. STREAMLIT UI ---
-st.set_page_config(page_title="AI Model Monitoring Dashboard", layout="wide")
+st.set_page_config(page_title="SilentGuard AI Monitor", layout="wide")
 
-st.title("AI Model Monitoring Dashboard")
+st.title(" SilentGuard")
 
 # Sidebar
 st.sidebar.header("Control Panel")
@@ -983,11 +983,11 @@ if st.session_state.monitoring_run:
             target = monitor.warmup_target
             prog = min(1.0, curr / target)
 
-            # Update banner and progress in fixed placeholders (do not create new elements)
+            # Update banner and progress in fixed placeholders
             cal_banner_ph.markdown(f"""
-            <div style="background-color:#2c2f38; padding:15px; border-radius:10px; border-left:6px solid #6610f2; margin-bottom:15px;">
-                <h3 style="margin:0; color:#b366ff;">🛠️ SYSTEM CALIBRATION IN PROGRESS</h3>
-                <p style="margin:0; color:#ddd;">Establishing baseline behavior for anomaly detection...</p>
+            <div style="background-color:#FFFFFF; padding:15px; border-radius:10px; border-left:6px solid #6610f2; margin-bottom:15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="margin:0; color:#6610f2;">🛠️ SYSTEM CALIBRATION IN PROGRESS</h3>
+                <p style="margin:0; color:#333333;">Establishing baseline behavior for anomaly detection...</p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -1054,8 +1054,8 @@ if st.session_state.monitoring_run:
             value_color = "#DC3545"
 
         gauge_ph.markdown(f"""
-        <div style="text-align:center; background:#262730; border:3px solid {border_color}; border-radius:12px; padding:15px; box-shadow:0 4px 8px rgba(0,0,0,0.2);">
-            <h3 style="margin:0; color:#FAFAFA; font-weight:900;">HEALTH</h3>
+        <div style="text-align:center; background:#FFFFFF; border:3px solid {border_color}; border-radius:12px; padding:15px; box-shadow:0 4px 8px rgba(0,0,0,0.2);">
+            <h3 style="margin:0; color:#000000; font-weight:900;">HEALTH</h3>
             <h1 style="font-size:4em; margin:0; color:{value_color}; font-weight:900;">{int(score)}%</h1>
         </div>
         """, unsafe_allow_html=True)

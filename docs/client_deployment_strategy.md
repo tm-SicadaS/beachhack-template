@@ -113,4 +113,28 @@ SilentGuard itself is lightweight (~50MB RAM). It passively observes "CPU Delta"
 4.  [ ] **Verify:** Access `http://localhost:8501`. Green status indicates successful injection.
 
 ---
+
+## 7. Delivery Methods
+
+There are three ways to deliver SilentGuard to the client:
+
+### Method A: Source Package (Simplest)
+1.  Receive the `SilentGuard_Release.zip` package.
+2.  Unzip on the host server.
+3.  Run `docker-compose up --build`.
+
+### Method B: Docker Image Export (Offline / Air-Gapped)
+If the client server has no internet access:
+1.  We build the image: `docker build -t silentguard:v1 .`
+2.  We save it to a file: `docker save -o silentguard_v1.tar silentguard:v1`
+3.  Transfer `.tar` file to client.
+4.  Client loads it: `docker load -i silentguard_v1.tar`
+
+### Method C: Private Registry (Enterprise)
+1.  Pull the image from your private registry:
+    ```bash
+    docker pull registry.yourcompany.com/silentguard:v1
+    ```
+
+---
 *Confidential - For Client Distribution Only*
