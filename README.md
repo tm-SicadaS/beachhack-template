@@ -1,4 +1,4 @@
-# Silent Model Failure Detection System (SMFDS)
+# Pre Incident
 
 ## Selected Problem Statement
 
@@ -77,7 +77,7 @@ Instead of checking individual thresholds, it detects abnormal combinations of t
 
 ```
 git clone <your-repo-link>
-cd SilentFailureDetection
+cd Beachhack-template
 ```
 
 ### 2. Install Dependencies
@@ -85,31 +85,6 @@ cd SilentFailureDetection
 ```
 pip install -r requirements.txt
 ```
-
-### 3. Add Dataset
-
-Place your dataset inside:
-
-```
-/data/metrics.csv
-```
-
-Ensure dataset includes:
-
-* latency
-* memory
-* cpu_usage
-* error_rate
-
-### 4. Train Baseline Model
-
-Run:
-
-```
-python train_baseline.py
-```
-
-This generates:
 
 ```
 /models/baseline_model.pkl
@@ -131,8 +106,7 @@ The system will:
 
 ## Demo
 
-Live Demo (if applicable):
-Add your demo link here
+Live Demo : TO BE ADDED
 
 Example Output:
 
@@ -143,12 +117,7 @@ Example Output:
 
 ## Screenshots
 
-(Add screenshots of:)
 
-* Dataset preview
-* Training output
-* Monitoring console output
-* Graph showing anomaly detection
 
 ---
 
@@ -168,7 +137,6 @@ Our solution detects early degradation before catastrophic failure, making it su
 ## Future Improvements
 
 * Real-time streaming integration
-* Slack / Email alert integration
 * Dashboard using Streamlit or React
 * Drift detection using KL Divergence
 * Cloud deployment with Docker
