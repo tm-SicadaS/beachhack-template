@@ -11,10 +11,8 @@ import os
 import datetime
 from collections import deque
 import psutil
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.image import MIMEImage
+import psutil
+import mailtrap as mt
 import base64
 import io
 import matplotlib.pyplot as plt
@@ -574,27 +572,36 @@ def send_email_alert(alert_list, score, step, current_metrics, monitor, force=Fa
         </html>
         """
 
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = f"🚨 {severity}: SilentGuard Alert (Score: {score})"
-        msg['From'] = sender
-        msg['To'] = ", ".join(recipients)
-        msg.attach(MIMEText(html_content, 'html'))
-        
-        # Real Send Logic
-        smtp_host = CONFIG['email'].get('host')
-        if not smtp_host or "mailtrap" not in smtp_host:
+        # Mailtrap SDK Sending Logic
+        token = CONFIG['email'].get('api_token')
+        if not token or token == "your_mailtrap_api_token_here":
              ts = datetime.datetime.now().strftime("%H:%M:%S")
-             st.session_state.email_logs.appendleft(f"[{ts}] 📧 Alert Triggered (Simulated Send)")
-             st.session_state['last_email_time'] = time.time() # Mark sent even if simulated
+             st.session_state.email_logs.appendleft(f"[{ts}] ⚠️ Mailtrap Token Missing (Simulated Send)")
+             st.session_state['last_email_time'] = time.time()
              return
 
-        with smtplib.SMTP(smtp_host, CONFIG['email'].get('port', 587)) as server:
-            server.starttls()
-            server.login(CONFIG['email'].get('username'), CONFIG['email'].get('password'))
-            server.send_message(msg)
+        # Prepare Mail Object
+        sender_email = CONFIG['email'].get('sender_email', 'hello@demomailtrap.co')
+        
+        # Create recipient objects
+        to_addresses = [mt.Address(email=r) for r in recipients]
+        
+        mail = mt.Mail(
+            sender=mt.Address(email=sender_email, name="SilentGuard AI Monitor"),
+            to=to_addresses,
+            subject=f"🚨 {severity}: SilentGuard Alert (Score: {score})",
+            html=html_content,
+            category="System Alert"
+        )
+
+        # Create Client and Send
+        client = mt.MailtrapClient(token=token)
+        response = client.send(mail)
+        
+        print(f"Mailtrap Response: {response}")
             
         ts = datetime.datetime.now().strftime("%H:%M:%S")
-        st.session_state.email_logs.appendleft(f"[{ts}] 📧 Alert Sent to {len(recipients)} recipients")
+        st.session_state.email_logs.appendleft(f"[{ts}] 📧 Alert Sent via Mailtrap SDK")
         st.session_state['last_email_time'] = time.time()
 
     except Exception as e:
@@ -712,11 +719,10 @@ st.sidebar.caption(f"Status: {status_icon} {'Enabled' if enable_email else 'Disa
 
 # 3. Settings Expander
 with st.sidebar.expander("⚙️ Email Configuration"):
-    st.markdown(f"**SMTP Host:** `{CONFIG['email'].get('host', 'smtp.gmail.com')}`")
-    st.markdown(f"**Port:** `{CONFIG['email'].get('port', 587)}`")
-    st.markdown(f"**Sender:** `{CONFIG['email'].get('sender', 'alerts@silentguard.ai')}`")
+    st.markdown(f"**API Token:** `{'*' * 10 if CONFIG['email'].get('api_token') else 'Missing'}`")
+    st.markdown(f"**Sender:** `{CONFIG['email'].get('sender_email')}`")
     
-    # Recipient Management
+    # Recipient Management (State-only override for session)
     recipients_str = st.text_input("Recipients (comma separated)", 
                                   value=",".join(st.session_state.email_recipients))
     if recipients_str:

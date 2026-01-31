@@ -10,3 +10,4 @@ matplotlib>=3.5
 seaborn>=0.11
 datasets>=2.0
 pyarrow>=8.0
+mailtrap>=1.0

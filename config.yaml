@@ -32,12 +32,17 @@ features: []
 # -------------------------------
 # Email Alert Configuration
 # -------------------------------
+
+# -------------------------------
+# Email Alert Configuration (Mailtrap SDK)
+# -------------------------------
 email:
   enabled: true
-  host: sandbox.smtp.mailtrap.io
-  port: 2525
-  # username: 8c1255d22724ad
-  # password: 1347fbc2c88a1b
-  username: 105711b318891c
-  password: 189fc934d8f3de
-  sender: "AI Monitor <alerts@demo.ai>"
+  
+  # Mailtrap API Configuration
+  api_token: "2c70a12885498b889995c2b20cf4fef9"
+  sender_email: "silentguard@demomailtrap.co"
+  
+  # Alert Recipients
+  recipients:
+    - "theneondev@gmail.com"
