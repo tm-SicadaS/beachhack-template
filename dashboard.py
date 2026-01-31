@@ -188,6 +188,30 @@ st.markdown(f"""
     .js-plotly-plot .plotly {{
         background: rgba(255, 255, 255, 0.0) !important;
     }}
+
+    /* --- FIXES FOR SIDEBAR & INPUTS --- */
+
+    /* 1. Fix the dark boxes around API Token & Sender (Markdown Code blocks) */
+    code {{
+        background-color: #FFFFFF !important;
+        color: #d63384 !important; /* Standard code pink/red or use #000 for black */
+        border: 1px solid #e0e0e0 !important;
+        border-radius: 4px;
+        padding: 2px 5px;
+    }}
+
+    /* 2. Fix the "Recipients" Input Field Background */
+    [data-testid="stTextInput"] input {{
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: 1px solid #cccccc !important;
+    }}
+
+    /* 3. Ensure input label text is visible */
+    [data-testid="stWidgetLabel"] p {{
+        color: #000000 !important;
+        font-weight: 600;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
