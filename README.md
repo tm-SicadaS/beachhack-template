@@ -118,7 +118,7 @@ This generates:
 ### 5. Run Monitoring System
 
 ```
-python main.py
+python run.py
 ```
 
 The system will:

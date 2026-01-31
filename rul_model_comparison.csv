@@ -1,0 +1,8 @@
+Model,Train RMSE,Test RMSE,Train MAE,Test MAE,Train R²,Test R²
+Random Forest,25.17,41.26,17.27,29.42,0.8677,0.6273
+Gradient Boosting,31.65,41.73,22.32,29.74,0.7908,0.6188
+Support Vector Regression,40.44,41.96,26.66,29.45,0.6584,0.6147
+ElasticNet,44.76,44.33,34.13,34.03,0.5815,0.5699
+Lasso Regression,44.75,44.34,34.14,34.05,0.5817,0.5697
+Linear Regression,44.75,44.34,34.14,34.05,0.5817,0.5696
+Ridge Regression,44.75,44.34,34.14,34.05,0.5817,0.5696

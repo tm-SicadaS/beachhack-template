@@ -1,0 +1,23 @@
+
+# AI Model Monitoring Configuration
+# User: Edit this file to point to your model and set thresholds.
+
+# Path to your pickled model file (.pkl, .joblib)
+# The system will auto-detect if it's a raw object or a dictionary wrapper.
+model_path: "nasa_rul_failure_prediction_model.pkl"
+
+# Monitoring Thresholds
+monitoring:
+  # Latency: Warning if inference takes longer than this (ms)
+  latency_threshold_ms: 100.0
+  
+  # Drift: Critical if prediction deviates by more than N standard deviations from baseline
+  drift_sigma_threshold: 3.0
+  
+  # Degradation: Warning if degradation score (0-100) drops below this
+  health_warning_threshold: 70
+  health_critical_threshold: 40
+
+# Optional: Column names for visualization (if your model doesn't provide them)
+# If left empty, we will use indices (Feat 0, Feat 1, etc.)
+features: []
