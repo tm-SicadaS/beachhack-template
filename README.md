@@ -1,163 +1,176 @@
-Predictive System Outage Forecasting Engine
+# Silent Model Failure Detection System (SMFDS)
 
-(Pre-Incident Multi-Metric Monitoring & Alert System)
+## Selected Problem Statement
 
-
-
-## 📌 Overview
-
-This project is a predictive reliability monitoring system designed to forecast infrastructure failures *before* they happen.
-
-Instead of reacting after a server crashes, our system analyzes multiple system metrics over time, learns normal behavior, detects degradation patterns, and predicts potential outages in advance.
-
-It operates in shadow mode, meaning it does not interfere with production systems — it only observes, analyzes, and predicts.
+Modern AI/ML systems and production applications often fail silently. Instead of crashing, they continue running while performance degrades due to latency spikes, memory issues, error rate increase, or unseen data drift. Existing monitoring tools rely on ground-truth labels or manual thresholds, which leads to delayed detection and business impact.
 
 ---
 
-🎯 Problem Statement
+## Project Overview
 
-Modern systems rely on static threshold alerts (e.g., CPU > 90%).
-These alerts trigger only after damage has already begun.
+Silent Model Failure Detection System is a multi-metric anomaly detection platform that identifies early signs of system degradation before complete failure occurs.
 
-Current monitoring systems:
+Instead of waiting for accuracy reports or manual alerts, our system:
 
-* React too late
-* Generate excessive false positives
-* Lack explainability
-* Do not forecast degradation trends
+* Learns what “normal system behaviour” looks like
+* Monitors latency, memory usage, CPU usage, and error rate
+* Detects deviations using unsupervised machine learning
+* Classifies health status as:
 
-This leads to:
+  * 🟢 Normal
+  * 🟡 Warning
+  * 🔴 Critical
 
-* Downtime
-* Revenue loss
+The system works using batch statistical monitoring and anomaly detection models trained on baseline (healthy) data.
+
+---
+
+## Technical Approach
+
+### 1. Baseline Learning
+
+* Healthy system metrics are extracted from dataset
+* Isolation Forest (unsupervised ML) is trained on normal behaviour
+* The model learns multi-dimensional patterns instead of static thresholds
+
+### 2. Multi-Metric Monitoring
+
+The system monitors:
+
+* Latency
+* Memory Usage
+* CPU Usage
+* Error Rate
+
+Instead of checking individual thresholds, it detects abnormal combinations of these metrics.
+
+### 3. Batch Monitoring Engine
+
+* Data is processed in batches (50–100 samples)
+* Each batch is evaluated using the trained model
+* If anomaly percentage crosses threshold → system triggers alert
+
+### 4. Severity Classification
+
+| Condition            | Status   |
+| -------------------- | -------- |
+| No anomalies         | Normal   |
+| Few anomalies        | Warning  |
+| High anomaly density | Critical |
+
+---
+
+## Tech Stack
+
+* Python
+* Pandas & NumPy (data handling)
+* Scikit-learn (Isolation Forest model)
+* Matplotlib (visualization)
+* Joblib (model saving/loading)
+* VS Code / Google Colab (development environment)
+
+---
+
+## Setup Instructions
+
+### 1. Clone Repository
+
+```
+git clone <your-repo-link>
+cd SilentFailureDetection
+```
+
+### 2. Install Dependencies
+
+```
+pip install -r requirements.txt
+```
+
+### 3. Add Dataset
+
+Place your dataset inside:
+
+```
+/data/metrics.csv
+```
+
+Ensure dataset includes:
+
+* latency
+* memory
+* cpu_usage
+* error_rate
+
+### 4. Train Baseline Model
+
+Run:
+
+```
+python train_baseline.py
+```
+
+This generates:
+
+```
+/models/baseline_model.pkl
+```
+
+### 5. Run Monitoring System
+
+```
+python main.py
+```
+
+The system will:
+
+* Process metrics in batches
+* Detect anomalies
+* Display system health status
+
+---
+
+## Demo
+
+Live Demo (if applicable):
+Add your demo link here
+
+Example Output:
+
+* Normal Batch → Status: NORMAL
+* Failure Injected Batch → Status: CRITICAL
+
+---
+
+## Screenshots
+
+(Add screenshots of:)
+
+* Dataset preview
+* Training output
+* Monitoring console output
+* Graph showing anomaly detection
+
+---
+
+## Why This Matters
+
+Silent degradation causes:
+
+* Increased cloud costs
+* SLA violations
 * Poor user experience
-* Operational chaos
+* Revenue loss
 
-Our solution moves from **reactive monitoring → predictive intelligence**.
-
-Proposed Solution
-
-We built a multi-metric forecasting engine that:
-
-1. Learns baseline healthy system behavior
-2. Monitors multiple metrics simultaneously
-3. Detects gradual degradation trends
-4. Estimates time-to-threshold breach
-5. Generates explainable predictive alerts
-
- Metrics Monitored
-
-* CPU Usage (%)
-* Memory Usage (%)
-* Request Latency (ms)
-* Error Rate (%)
-
-All metrics are analyzed as time-series data.
+Our solution detects early degradation before catastrophic failure, making it suitable for AI pipelines, cloud systems, and production services.
 
 ---
 
- System Architecture
+## Future Improvements
 
-```
-Metric Generator / Ingestion
-          ↓
-Time-Series Storage (Pandas)
-          ↓
-Baseline Learning Module
-          ↓
-Statistical & Trend Engine
-          ↓
-Health Scoring Logic
-          ↓
-Predictive Alert System
-          ↓
-Streamlit Dashboard
-```
+* Real-time streaming integration
+* Slack / Email alert integration
+* Dashboard using Streamlit or React
+* Drift detection using KL Divergence
+* Cloud deployment with Docker
 
 ---
-
- Core Technical Components
-
-### 1️⃣ Baseline Learning
-
-* Calculates mean and standard deviation
-* Creates adaptive normal ranges
-* Uses rolling windows for dynamic behavior modeling
-
-### 2️⃣ Anomaly Detection
-
-* Z-Score analysis
-* Rolling statistics
-* Multi-metric health scoring
-
-### 3️⃣ Trend & Forecasting
-
-* Rolling slope detection
-* Degradation trajectory analysis
-* Estimated time-to-failure calculation
-
-### 4️⃣ Alert Classification
-
-* 🟢 Normal
-* 🟡 Warning
-* 🔴 Critical
-
-Alerts are generated based on combined statistical signals.
-
----
-
-## ⚙️ Technology Stack
-
-* **Python** – Core logic
-* **Pandas & NumPy** – Time-series processing
-* **Streamlit** – Interactive dashboard
-* **SQLite / CSV** – Data storage
-* **Docker ** – Containerization
-
----
-
-🚀 How to Run
-
-1. Install dependencies:
-
-```
-pip install streamlit pandas numpy
-```
-
-2. Run the app:
-
-```
-streamlit run app.py
-```
-
-3. View dashboard in browser.
-
----
-
-🧪 Shadow Mode Validation
-
-The system runs alongside simulated static threshold alerts and compares:
-
-* Predicted incident timing
-* Actual threshold breach timing
-
-This validates forecasting performance and reduces false positives.
-
----
-
-🏆 Key Differentiators
-
-* Predictive instead of reactive
-* Multi-metric correlation
-* Explainable alerts
-* Lightweight & scalable
-* Works without complex ML models
-
----
-
- 📈 Future Improvements
-
-* Real cloud metric ingestion
-* Advanced forecasting models (ARIMA / Prophet)
-* Incident clustering
-* Automated mitigation workflows
