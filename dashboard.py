@@ -331,9 +331,6 @@ if os.path.exists(bg_path):
         bg_url = "app/static/background.png"
 
 st.markdown(f"""
-st.set_page_config(page_title="SilentGuard", layout="wide", page_icon="🤖")
-
-st.markdown("""
 <style>
     /* Set the background image */
     .stApp {{
