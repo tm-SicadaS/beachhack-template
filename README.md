@@ -149,7 +149,7 @@ Pull the published image:
 ```bash
 docker pull r0xh4n/silentguard:tagname
 ```
-tagname refers latest version
+NB:tagname refers latest version
 
 ### Run (recommended)
 Mount the client's model folder read-only and set MODEL_PATH:
@@ -167,7 +167,7 @@ Access the dashboard at: http://localhost:8501
 version: '3.8'
 services:
   silentguard:
-    image: r0xh4n/silentguard:v1.0
+    image: r0xh4n/silentguard:tagname
     container_name: silentguard_monitor
     ports:
       - "8501:8501"
