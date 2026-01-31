@@ -230,7 +230,7 @@ def send_alert_email(to_email, subject, body, config):
 
 
 # --- 3. DASHBOARD UI ---
-st.set_page_config(page_title="AI Model Monitor", layout="wide", page_icon="🤖")
+st.set_page_config(page_title="SilentGuard", layout="wide", page_icon="🤖")
 
 st.markdown("""
 <style>
@@ -241,7 +241,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🛡️ Minimal AI Monitor")
+st.title("🛡️ SilentGuard")
 
 # Sidebar
 st.sidebar.header("Control Panel")
