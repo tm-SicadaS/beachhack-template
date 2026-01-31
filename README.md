@@ -117,7 +117,10 @@ Example Output:
 
 ## Screenshots
 
+<img width="1882" height="855" alt="Screenshot 2026-01-31 200015" src="https://github.com/user-attachments/assets/b67072b9-541a-40ff-9b88-a89048504a74" />
 
+<img width="2963" height="2364" alt="feature_importance_rul" src="https://github.com/user-attachments/assets/67eb4a40-4477-4a86-b133-cd522775d2e7" />
+<img width="4170" height="3014" alt="rul_prediction_analysis" src="https://github.com/user-attachments/assets/3c123e73-9e70-4cee-ba7d-e4d39a603873" />
 
 ---
 
