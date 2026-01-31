@@ -10,6 +10,90 @@ import time
 import os
 from collections import deque
 import psutil
+import smtplib
+from email.mime.text import MIMEText
+
+# Custom CSS for styling
+st.markdown("""
+<style>
+    /* Main dashboard title and headers - light orange */
+    h1, h2, h3, h4, h5, h6 {
+        color: #FF9F66 !important;
+    }
+    
+    /* Streamlit metric labels - light orange */
+    [data-testid="stMetricLabel"] {
+        color: #FF9F66 !important;
+    }
+    
+    /* Streamlit metric values - black for data */
+    [data-testid="stMetricValue"] {
+        color: #000000 !important;
+    }
+    
+    /* Background - white */
+    .stApp {
+        background-color: #FFFFFF !important;
+    }
+    
+    /* Sidebar background */
+    [data-testid="stSidebar"] {
+        background-color: #F5F5F5 !important;
+    }
+    
+    /* Alert boxes - critical (red) */
+    .alert-box {
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 5px;
+        font-weight: 500;
+    }
+    
+    .alert-critical {
+        background-color: #FFE5E5;
+        border-left: 5px solid #FF0000;
+        color: #CC0000;
+    }
+    
+    /* Alert boxes - warning (orange-red) */
+    .alert-warning {
+        background-color: #FFF3E5;
+        border-left: 5px solid #FF6B6B;
+        color: #D04545;
+    }
+    
+    /* Buttons - light orange */
+    .stButton button {
+        background-color: #FF9F66 !important;
+        color: white !important;
+        border: none !important;
+    }
+    
+    .stButton button:hover {
+        background-color: #FF8844 !important;
+    }
+    
+    /* Data tables - black text */
+    .dataframe {
+        color: #000000 !important;
+    }
+    
+    /* Chart titles - light orange */
+    .plot-container .gtitle {
+        fill: #FF9F66 !important;
+    }
+    
+    /* Input fields border - light orange on focus */
+    input:focus {
+        border-color: #FF9F66 !important;
+    }
+    
+    /* Expander headers - light orange */
+    [data-testid="stExpander"] summary {
+        color: #FF9F66 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # --- 1. CONFIGURATION LOADING ---
 def load_config():
@@ -23,6 +107,14 @@ def load_config():
             "drift_sigma_threshold": 3.0,
             "health_warning_threshold": 70,
             "health_critical_threshold": 40
+        },
+        "email": {
+            "enabled": True,
+            "host": "sandbox.smtp.mailtrap.io",
+            "port": 2525,
+            "username": "8c1255d22724ad",
+            "password": "1347fbc2c88a1b",
+            "sender": "AI Monitor <alerts@demo.ai>"
         }
     }
 
@@ -187,34 +279,143 @@ class ModelMonitor:
         health_score = max(0, min(100, health_score))
         return health_score, alerts
 
-# --- 3. DASHBOARD UI ---
-st.set_page_config(page_title="AI Model Monitor", layout="wide", page_icon="🤖")
+# --- 3. EMAIL ALERTS ---
+def send_alert_email(recipient, subject, body, config):
+    if not config['email']['enabled']:
+        return
+    try:
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = config['email']['sender']
+        msg['To'] = recipient
+        with smtplib.SMTP(config['email']['host'], config['email']['port']) as server:
+            server.starttls()
+            server.login(config['email']['username'], config['email']['password'])
+            server.send_message(msg)
+    except Exception as e:
+        st.sidebar.error(f"Email send failed: {e}")
 
-st.markdown("""
+# --- 3. DASHBOARD UI ---
+st.set_page_config(page_title="AI Model Monitor", layout="wide")
+
+# Load local background image (if present) and use as data URI; fallback to path otherwise
+bg_path = "background.png"
+bg_url = "app/static/background.png"
+if os.path.exists(bg_path):
+    try:
+        import base64
+        with open(bg_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("utf-8")
+        bg_url = f"data:image/png;base64,{b64}"
+    except Exception:
+        # keep fallback
+        bg_url = "app/static/background.png"
+
+st.markdown(f"""
 <style>
-    .stMetric { background-color: #1E1E1E; padding: 10px; border-radius: 5px; border: 1px solid #333; }
-    .alert-box { padding: 10px; margin-bottom: 5px; border-radius: 5px; color: white; }
-    .alert-critical { background-color: #bd1313; }
-    .alert-warning { background-color: #bd8b13; }
+    /* Set the background image */
+    .stApp {{
+        background-image: url("{bg_url}");
+        background-attachment: fixed;
+        background-size: cover;
+    }}
+
+    /* Make the main content containers transparent */
+    [data-testid="stHeader"], [data-testid="stAppViewContainer"] {{
+        background-color: rgba(0,0,0,0) !important;
+    }}
+
+    /* Sidebar transparency */
+    [data-testid="stSidebar"] {{
+        background-color: rgba(245, 245, 245, 0.8) !important; /* Semi-transparent gray */
+        backdrop-filter: blur(10px);
+    }}
+    
+    /* Headers and Labels - keeping your light orange theme */
+    h1, h2, h3, h4, h5, h6, [data-testid="stMetricLabel"] {{
+        color: #FF9F66 !important;
+    }}
+    
+    /* Improve readability of metric values over the image */
+    [data-testid="stMetricValue"] {{
+        color: #000000 !important;
+        background-color: rgba(255, 255, 255, 0.4);
+        padding: 5px;
+        border-radius: 5px;
+    }}
+
+    /* Alert boxes - keeping functional colors */
+    .alert-box {{
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 5px;
+        font-weight: 500;
+        backdrop-filter: blur(5px);
+    }}
+    
+    .alert-critical {{
+        background-color: rgba(255, 229, 229, 0.9);
+        border-left: 5px solid #FF0000;
+        color: #CC0000;
+    }}
+    
+    .alert-warning {{
+        background-color: rgba(255, 243, 229, 0.9);
+        border-left: 5px solid #FF6B6B;
+        color: #D04545;
+    }}
+    
+    /* Buttons */
+    .stButton button {{
+        background-color: #FF9F66 !important;
+        color: white !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🛡️ Minimal AI Monitor")
+st.title("Minimal AI Monitor")
 
-# Sidebar
-st.sidebar.header("Control Panel")
+# Sidebar Controls
+st.sidebar.header("⚙️ Controls")
 
-if "monitoring_active" not in st.session_state:
+if 'monitoring_active' not in st.session_state:
     st.session_state.monitoring_active = False
 
-def start_monitoring():
-    st.session_state.monitoring_active = True
+if st.sidebar.button("▶️ Start Monitoring" if not st.session_state.monitoring_active else "⏸️ Stop Monitoring"):
+    st.session_state.monitoring_active = not st.session_state.monitoring_active
+    st.rerun()
 
-def stop_monitoring():
-    st.session_state.monitoring_active = False
+st.sidebar.markdown("---")
+st.sidebar.subheader(" Alert Settings")
+user_email = st.sidebar.text_input("Your Email", placeholder="user@example.com")
 
-st.sidebar.button("▶ Start Monitoring", type="primary", on_click=start_monitoring)
-st.sidebar.button("⏹ Stop Monitoring", on_click=stop_monitoring)
+if st.sidebar.button(" Send Summary Report"):
+    if user_email:
+        # Generate report
+        total_steps = 0
+        avg_health = 0
+        total_alerts = 0
+        if 'monitor' in locals() and monitor is not None:
+            total_steps = len(monitor.history['predictions'])
+            avg_health = np.mean(list(monitor.history['health'])) if monitor.history['health'] else 0
+        if 'alerts_history' in locals():
+            total_alerts = len(alerts_history)
+        report_body = f"""
+AI Model Monitoring Report
+
+Total Monitoring Steps: {total_steps}
+Average Health Score: {avg_health:.1f}/100
+Total Alerts: {total_alerts}
+
+Recent Alerts:
+""" + "\n".join(list(alerts_history)[:10] if 'alerts_history' in locals() else []) + """
+
+Thank you for using the AI Monitor.
+"""
+        send_alert_email(user_email, "AI Monitor Report", report_body, CONFIG)
+        st.sidebar.success("Report sent!")
+    else:
+        st.sidebar.error("Please enter your email first.")
 
 st.sidebar.markdown("---")
 config_view = st.sidebar.expander("View Config")
@@ -230,7 +431,7 @@ chart_col1, chart_col2 = st.columns(2)
 chart_pred_ph = chart_col1.empty()
 chart_lat_ph = chart_col2.empty()
 
-st.markdown("### 🔔 Active Alerts")
+st.markdown("###  Active Alerts")
 alert_log_ph = st.empty()
 
 # --- 4. DATA SIMULATION (DEMO) ---
@@ -254,6 +455,8 @@ if st.session_state.monitoring_active:
     # State
     alerts_history = deque(maxlen=200)
     step = 0
+    last_status = "NORMAL"
+    max_steps = 500  # Limit to prevent infinite loop blocking UI
 
     # Additional placeholders for CPU and Memory charts (clean UI: one chart per metric)
     chart_col3, chart_col4 = st.columns(2)
@@ -287,17 +490,27 @@ if st.session_state.monitoring_active:
         else:
             score, current_alerts = 100, []
 
+        # Determine current status
+        current_status = "CRITICAL" if score < 40 else "WARNING" if score < 70 else "NORMAL"
+
+        # Send email on status change to WARNING or CRITICAL
+        if user_email and current_status != last_status and current_status in ["WARNING", "CRITICAL"]:
+            subject = f"AI Monitor Alert: {current_status}"
+            body = f"System status changed to {current_status}.\n\nAlerts:\n" + "\n".join(current_alerts) + f"\n\nHealth Score: {score}/100\nStep: {step}"
+            send_alert_email(user_email, subject, body, CONFIG)
+            last_status = current_status
+
         # Add alerts to log
         if current_alerts:
             for a in current_alerts:
                 alerts_history.appendleft(f"[Step {step}] {a}")
 
         # 6. Render UI
-        # Health Gauge
-        health_color = "green" if score > 70 else "orange" if score > 40 else "red"
+        # Health Gauge with custom light orange color
+        health_color = "#28A745" if score > 70 else "#FF9F66" if score > 40 else "#FF0000"
         health_ph.markdown(f"""
             <div style="text-align: center;">
-                <h3 style="margin:0; color:#888;">System Health</h3>
+                <h3 style="margin:0; color:#FF9F66;">System Health</h3>
                 <h1 style="color: {health_color}; font-size: 3em; margin:0;">{score}/100</h1>
             </div>
         """, unsafe_allow_html=True)
@@ -325,43 +538,75 @@ if st.session_state.monitoring_active:
 
         monitor.history['health'].append(score)
 
-        # Charts: Prediction, Latency, CPU Delta, Memory Delta
+        # Charts: Prediction, Latency, CPU Delta, Memory Delta with custom colors
         fig_pred = px.line(y=list(monitor.history['predictions']), title="Prediction Stream (Drift Detection)")
+        fig_pred.update_traces(line_color='#FF9F66')
         if monitor.baseline_learned and 'value' in monitor.baseline_stats:
             mean = monitor.baseline_stats['value']['mean']
             std = monitor.baseline_stats['value']['std']
             fig_pred.add_hline(y=mean, line_dash="dash", line_color="green")
-            fig_pred.add_hline(y=mean + 3*std, line_dash="dot", line_color="red")
-            fig_pred.add_hline(y=mean - 3*std, line_dash="dot", line_color="red")
-        fig_pred.update_layout(height=300, margin=dict(l=0, r=0, t=30, b=0))
+            fig_pred.add_hline(y=mean + 3*std, line_dash="dot", line_color="#FF0000")
+            fig_pred.add_hline(y=mean - 3*std, line_dash="dot", line_color="#FF0000")
+        fig_pred.update_layout(
+            height=300, 
+            margin=dict(l=0, r=0, t=30, b=0),
+            title_font=dict(color='#FF9F66'),
+            font=dict(color='#000000'),
+            plot_bgcolor='#FFFFFF',
+            paper_bgcolor='#FFFFFF'
+        )
         try:
             chart_pred_ph.plotly_chart(fig_pred, width="stretch")
         except:
             chart_pred_ph.plotly_chart(fig_pred, use_container_width=True)
 
         fig_lat = px.line(y=list(monitor.history['latency']), title="Inference Latency (ms)")
-        fig_lat.add_hline(y=CONFIG['monitoring']['latency_threshold_ms'], line_color="red")
-        fig_lat.update_layout(height=250, margin=dict(l=0, r=0, t=30, b=0))
+        fig_lat.update_traces(line_color='#FF9F66')
+        fig_lat.add_hline(y=CONFIG['monitoring']['latency_threshold_ms'], line_color="#FF0000")
+        fig_lat.update_layout(
+            height=250, 
+            margin=dict(l=0, r=0, t=30, b=0),
+            title_font=dict(color='#FF9F66'),
+            font=dict(color='#000000'),
+            plot_bgcolor='#FFFFFF',
+            paper_bgcolor='#FFFFFF'
+        )
         try:
             chart_lat_ph.plotly_chart(fig_lat, width="stretch")
         except:
             chart_lat_ph.plotly_chart(fig_lat, use_container_width=True)
 
         fig_cpu = px.line(y=list(monitor.history['cpu_delta']), title="CPU Delta (%)")
-        fig_cpu.update_layout(height=250, margin=dict(l=0, r=0, t=30, b=0))
+        fig_cpu.update_traces(line_color='#FF9F66')
+        fig_cpu.update_layout(
+            height=250, 
+            margin=dict(l=0, r=0, t=30, b=0),
+            title_font=dict(color='#FF9F66'),
+            font=dict(color='#000000'),
+            plot_bgcolor='#FFFFFF',
+            paper_bgcolor='#FFFFFF'
+        )
         try:
             chart_cpu_ph.plotly_chart(fig_cpu, width="stretch")
         except:
             chart_cpu_ph.plotly_chart(fig_cpu, use_container_width=True)
 
         fig_mem = px.line(y=list(monitor.history['mem_delta']), title="Memory Delta (MB)")
-        fig_mem.update_layout(height=250, margin=dict(l=0, r=0, t=30, b=0))
+        fig_mem.update_traces(line_color='#FF9F66')
+        fig_mem.update_layout(
+            height=250, 
+            margin=dict(l=0, r=0, t=30, b=0),
+            title_font=dict(color='#FF9F66'),
+            font=dict(color='#000000'),
+            plot_bgcolor='#FFFFFF',
+            paper_bgcolor='#FFFFFF'
+        )
         try:
             chart_mem_ph.plotly_chart(fig_mem, width="stretch")
         except:
             chart_mem_ph.plotly_chart(fig_mem, use_container_width=True)
 
-        # Alert Log (show last 10)
+        # Alert Log (show last 10) with red styling for alerts
         alert_html = ""
         for msg in list(alerts_history)[:10]:
             color = "alert-critical" if "CRITICAL" in msg.upper() else ("alert-warning" if "WARNING" in msg.upper() else "alert-warning")
@@ -371,3 +616,5 @@ if st.session_state.monitoring_active:
         # Pause between iterations to make it truly real-time (2.5s)
         time.sleep(2.5)
         step += 1
+        if step >= max_steps:
+            break

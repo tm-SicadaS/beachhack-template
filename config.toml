@@ -1,0 +1,17 @@
+[theme]
+# Base theme
+base = "light"
+
+# Primary color (light orange)
+primaryColor = "#FF9F66"
+
+# Set background to transparent or matching the image's lightest tone
+backgroundColor = "#FFFFFF"
+
+# Secondary background (sidebar) - adjusted for transparency in CSS
+secondaryBackgroundColor = "#F5F5F5"
+
+# Text color
+textColor = "#000000"
+
+font = "sans serif"
