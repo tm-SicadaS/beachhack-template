@@ -610,7 +610,7 @@ def get_synthetic_input(step):
 # --- 6. STREAMLIT UI ---
 st.set_page_config(page_title="SilentGuard AI Monitor", layout="wide", page_icon="🛡️")
 
-st.title("🛡️ SilentGuard Production Monitor")
+st.title("🛡️ SilentGuard")
 
 # Sidebar
 st.sidebar.header("Controls")
