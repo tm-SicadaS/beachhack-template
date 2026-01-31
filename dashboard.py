@@ -39,78 +39,155 @@ def load_config():
 
 CONFIG = load_config()
 
-# --- 2. CSS STYLING (DARK THEME) ---
-st.markdown("""
+# Helper to load optional background image and apply a lighter overlay + UI accent colors
+
+def get_base64_image(image_path):
+    try:
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
+    except:
+        return None
+
+# Get background image
+bg_image = get_base64_image("background.png")
+
+# Custom CSS for styling with background image
+bg_style = f"""
+    background-image: url("data:image/png;base64,{bg_image}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+""" if bg_image else "background-color: transparent;"
+
+st.markdown(f"""
 <style>
-    /* Global Text Color - Force Light */
-    body, .stMarkdown, .stText, h1, h2, h3, h4, h5, h6, p, li, span {
-        color: #FAFAFA !important;
-        font-family: 'Segoe UI', sans-serif;
-    }
     
-    /* Background - Dark */
-    .stApp {
-        background-color: #0E1117 !important;
-    }
+    /* Main app background with image */
+    .stApp {{
+        {bg_style}
+    }}
     
-    /* Sidebar background */
-    [data-testid="stSidebar"] {
-        background-color: #262730 !important;
-    }
+    /* Overlay kept transparent so background is visible */
+    .stApp::before {{
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.0);
+        z-index: 0;
+        pointer-events: none;
+    }}
     
-    /* Cards / Metrics */
-    [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {
-        background-color: #262730;
-        border: 1px solid #464B5C;
-        color: #FAFAFA !important;
-        border-radius: 8px;
-        padding: 5px 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
     
-    /* Metric Label specifically */
-    [data-testid="stMetricLabel"] {
-        color: #AAAAAA !important; /* Slightly dimmer for label */
-    }
+    /* Ensure content is above overlay */
+    .main .block-container {{
+        position: relative;
+        z-index: 1;
+    }}
     
-    /* Tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        background-color: #262730;
-        border-radius: 10px;
-        padding: 5px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    button[data-baseweb="tab"] {
-        color: #FAFAFA !important;
-    }
+    /* Dashboard headers - light orange */
+    h1, h2, h3, h4, h5, h6 {{
+        color: #FF9F66 !important;
+    }}
     
-    /* Chart Containers */
-    .element-container {
-        border-radius: 10px;
-    }
+    /* Metric labels - light orange */
+    [data-testid="stMetricLabel"] {{
+        color: #FF9F66 !important;
+        font-weight: 600 !important;
+    }}
     
-    /* Buttons - Orange Accent */
-    .stButton button {
-        background-color: #FF9F66 !important;
-        color: white !important;
-        border: none !important;
-        font-weight: bold;
-    }
-    .stButton button:hover {
-        background-color: #FF8844 !important;
-    }
+    /* Metric values and all numericals - black */
+    [data-testid="stMetricValue"] {{
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }}
     
-    /* Alert Boxes - Darker but readable */
-    .alert-box {
+    /* All text - black */
+    .stMarkdown, p, span, div {{
+        color: #000000 !important;
+    }}
+    
+    /* Sidebar background - light with transparency */
+    [data-testid="stSidebar"] {{
+        background-color: rgba(245, 245, 245, 0.95) !important;
+    }}
+    
+    [data-testid="stSidebar"] * {{
+        color: #000000 !important;
+    }}
+    
+    /* Alert boxes - RED for all alerts */
+    .alert-box {{
         padding: 12px;
         margin: 8px 0;
         border-radius: 5px;
-        font-weight: 500;
-        color: #000; /* Keep text dark for these pastel alerts */
-        border-left: 6px solid;
-    }
-    .alert-critical { background-color: #F8D7DA; border-color: #DC3545; }
-    .alert-warning { background-color: #FFF3CD; border-color: #FFC107; }
+        font-weight: 600;
+        background-color: #FFE5E5;
+        border-left: 5px solid #FF0000;
+        color: #FF0000 !important;
+    }}
+    
+    .alert-critical {{
+        background-color: #FFE5E5;
+        border-left: 5px solid #FF0000;
+        color: #FF0000 !important;
+    }}
+    
+    .alert-warning {{
+        background-color: #FFE5E5;
+        border-left: 5px solid #FF0000;
+        color: #FF0000 !important;
+    }}
+    
+    /* Buttons - light orange */
+    .stButton button {{
+        background-color: #FF9F66 !important;
+        color: white !important;
+        border: none !important;
+        font-weight: 600 !important;
+    }}
+    
+    .stButton button:hover {{
+        background-color: #FF8844 !important;
+    }}
+    
+    /* Data tables - black text */
+    .dataframe {{
+        color: #000000 !important;
+    }}
+    
+    /* Input fields */
+    input {{
+        color: #000000 !important;
+    }}
+    
+    input:focus {{
+        border-color: #FF9F66 !important;
+    }}
+    
+    /* Expander headers - light orange */
+    [data-testid="stExpander"] summary {{
+        color: #FF9F66 !important;
+        font-weight: 600 !important;
+    }}
+    
+    /* Select boxes and other inputs */
+    [data-baseweb="select"] {{
+        color: #000000 !important;
+    }}
+    
+    /* Text input */
+    [data-testid="stTextInput"] input {{
+        color: #000000 !important;
+    }}
+    
+    /* Ensure chart backgrounds are transparent */
+    .js-plotly-plot .plotly {{
+        background: rgba(255, 255, 255, 0.0) !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -615,12 +692,12 @@ def get_synthetic_input(step):
     return feats.reshape(1, -1)
 
 # --- 6. STREAMLIT UI ---
-st.set_page_config(page_title="SilentGuard AI Monitor", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="AI Model Monitoring Dashboard", layout="wide")
 
-st.title("🛡️ SilentGuard")
+st.title("AI Model Monitoring Dashboard")
 
 # Sidebar
-st.sidebar.header("Controls")
+st.sidebar.header("Control Panel")
 
 # Initialize Monitor in Session State (Persistence Fix)
 if 'monitor' not in st.session_state:
@@ -648,10 +725,13 @@ if st.session_state.baseline_learned:
 def toggle_run(): st.session_state.monitoring_run = not st.session_state.monitoring_run
 
 # Control Buttons
-if st.session_state.monitoring_run:
-    st.sidebar.button("⏹ STOP", on_click=toggle_run, type="primary")
-else:
-    st.sidebar.button("▶ START", on_click=toggle_run)
+if st.sidebar.button("Start Monitoring"):
+    st.session_state.monitoring_run = True
+    st.rerun()
+
+if st.sidebar.button("Stop Monitoring"):
+    st.session_state.monitoring_run = False
+    st.rerun()
 
 
 
@@ -962,12 +1042,21 @@ if st.session_state.monitoring_run:
             status = "🟢 OPERATIONAL" if score > 70 else "🔴 DEGRADED"
             st.markdown(f"**System Status:** {status} | **Step:** {step}")
 
-        # Gauge
-        c = "#28A745" if score>80 else "#FFC107" if score>50 else "#DC3545"
+        # Gauge — color scheme: white for healthy, faded-orange for warning, red for critical
+        if score > 70:
+            border_color = "#FFFFFF"
+            value_color = "#FFFFFF"
+        elif score > 40:
+            border_color = "#FFDCC8"  # faded orange (light)
+            value_color = "#F6AD83"   # orange value for emphasis
+        else:
+            border_color = "#DC3545"
+            value_color = "#DC3545"
+
         gauge_ph.markdown(f"""
-        <div style="text-align:center; background:#262730; border:3px solid {c}; border-radius:12px; padding:15px; box-shadow:0 4px 8px rgba(0,0,0,0.2);">
+        <div style="text-align:center; background:#262730; border:3px solid {border_color}; border-radius:12px; padding:15px; box-shadow:0 4px 8px rgba(0,0,0,0.2);">
             <h3 style="margin:0; color:#FAFAFA; font-weight:900;">HEALTH</h3>
-            <h1 style="font-size:4em; margin:0; color:{c}; font-weight:900;">{int(score)}%</h1>
+            <h1 style="font-size:4em; margin:0; color:{value_color}; font-weight:900;">{int(score)}%</h1>
         </div>
         """, unsafe_allow_html=True)
         
