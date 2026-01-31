@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  silentguard:
+    build: .
+    image: silentguard:latest
+    container_name: silentguard_app
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mount current directory to /app for development (hot reloading)
+      - ./:/app
+      # Avoid overwriting container deps
+      - /app/__pycache__
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

@@ -646,6 +646,9 @@ if st.session_state.monitoring_run:
 else:
     st.sidebar.button("▶ START", on_click=toggle_run)
 
+
+
+
 # Reset Button
 if st.sidebar.button("🔄 RESET SYSTEM"):
     # Full system reset
@@ -788,6 +791,7 @@ with calibration_container:
     cal_progress_ph = st.empty()
     cal_stats_ph = st.empty()
 
+
 tabs = st.tabs(["📊 PERFORMANCE", "📉 STABILITY", "🛡️ SAFETY", "💻 RESOURCES"])
 
 # Tab 1: Performance
@@ -809,6 +813,7 @@ chart_ph_mar = t3c2.empty()
 t4c1, t4c2 = tabs[3].columns(2)
 chart_ph_cpu = t4c1.empty()
 chart_ph_mem = t4c2.empty()
+
 
 alert_log = st.empty()
 
